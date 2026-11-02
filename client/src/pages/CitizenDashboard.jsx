@@ -27,9 +27,9 @@ import {
 import { INCIDENT_CATEGORIES, INCIDENT_PRIORITIES, PILOT_COORDINATES } from '../utils/constants';
 import { DAVANAGERE_WARDS } from '../utils/davanagereData';
 
-export default function CitizenDashboard() {
+export default function CitizenDashboard({ initialCategory, initialTab = 'report' }) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('report'); // 'report' | 'my-reports' | 'nearby'
+  const [activeTab, setActiveTab] = useState(initialTab || 'report'); // 'report' | 'my-reports' | 'nearby'
   const [allIncidents, setAllIncidents] = useState([]);
   const [myIncidents, setMyIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +40,7 @@ export default function CitizenDashboard() {
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('ROAD_HAZARD');
+  const [category, setCategory] = useState(initialCategory || 'ROAD_HAZARD');
   const [priority, setPriority] = useState('MEDIUM');
   const [wardId, setWardId] = useState(12);
   const [landmarkAddress, setLandmarkAddress] = useState('');
@@ -50,16 +50,35 @@ export default function CitizenDashboard() {
   const [photoPreviews, setPhotoPreviews] = useState([]);
   const [aiHint, setAiHint] = useState(null);
 
+  useEffect(() => {
+    if (initialCategory) {
+      setCategory(initialCategory);
+    }
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialCategory, initialTab]);
+
   const loadData = () => {
     setLoading(true);
     Promise.all([
-      api.getIncidents().catch(() => ({ data: [] })),
-      api.getMyIncidents().catch(() => ({ data: [] })),
-    ]).then(([publicRes, myRes]) => {
-      if (publicRes?.data) setAllIncidents(publicRes.data);
-      if (myRes?.data) setMyIncidents(myRes.data);
-      setLoading(false);
-    });
+      api.getIncidents ? api.getIncidents().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+      api.getMyIncidents ? api.getMyIncidents().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+    ])
+      .then(([publicRes, myRes]) => {
+        if (publicRes?.data && Array.isArray(publicRes.data)) {
+          setAllIncidents(publicRes.data);
+        }
+        if (myRes?.data && Array.isArray(myRes.data)) {
+          setMyIncidents(myRes.data);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to load incident data', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -292,8 +311,10 @@ export default function CitizenDashboard() {
                   onChange={(e) => setWardId(Number(e.target.value))}
                   className="w-full text-xs p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-white"
                 >
-                  {DAVANAGERE_WARDS.slice(0, 25).map((w) => (
-                    <option key={w.id} value={w.id}>{w.name}</option>
+                  {DAVANAGERE_WARDS.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      Ward {w.id}: {w.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -534,8 +555,10 @@ export default function CitizenDashboard() {
           onClose={() => setSelectedIncident(null)}
           onVouch={handleVouch}
           onAddComment={async (id, text) => {
-            const res = await api.createIncident; // or comment API
-            loadData();
+            try {
+              await api.addComment(id, text);
+              loadData();
+            } catch (e) {}
           }}
           currentUser={user}
         />

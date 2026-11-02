@@ -139,7 +139,7 @@ export default function LandingPage({ onNavigate }) {
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
             <button
-              onClick={() => onNavigate('citizen')}
+              onClick={() => onNavigate('citizen', { tab: 'report' })}
               className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold shadow-lg shadow-blue-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <ShieldAlert className="w-4 h-4 text-white" />
@@ -199,8 +199,7 @@ export default function LandingPage({ onNavigate }) {
               <div
                 key={key}
                 onClick={() => {
-                  setSelectedCategory(key);
-                  onNavigate('citizen');
+                  onNavigate('citizen', { category: key, tab: 'report' });
                 }}
                 className="bg-white border border-slate-200 hover:border-blue-300 rounded-2xl p-4 shadow-subtle hover:shadow-card transition-all cursor-pointer group"
               >
@@ -287,7 +286,7 @@ export default function LandingPage({ onNavigate }) {
             </div>
 
             <button
-              onClick={() => onNavigate('citizen')}
+              onClick={() => onNavigate('citizen', { tab: 'report' })}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-sm transition-colors"
             >
               <ShieldAlert className="w-3.5 h-3.5" />
@@ -325,27 +324,29 @@ export default function LandingPage({ onNavigate }) {
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-white"
               >
-                <option value="ALL">All Statuses</option>
-                {Object.keys(INCIDENT_STATUSES).map(s => (
-                  <option key={s} value={s}>{INCIDENT_STATUSES[s].label}</option>
+                <option value="ALL">All Lifecycle Statuses</option>
+                {Object.keys(INCIDENT_STATUSES).map(k => (
+                  <option key={k} value={k}>{INCIDENT_STATUSES[k].label}</option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* Feed List */}
+          {/* Incidents Grid */}
           {loading ? (
-            <div className="p-12 text-center text-xs text-slate-400">Loading civic reports...</div>
+            <div className="p-12 text-center text-slate-400 text-xs">
+              Fetching Davanagere community reports...
+            </div>
           ) : filteredIncidents.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-xs text-slate-500">
-              No incidents match your current filter query.
+            <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500 text-xs">
+              No matching incidents found for the selected filters.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredIncidents.map((incident) => (
                 <div
                   key={incident.id}
-                  className="bg-white border border-slate-200 rounded-2xl p-5 shadow-subtle hover:shadow-card transition-shadow flex flex-col justify-between space-y-4"
+                  className="bg-white border border-slate-200 rounded-2xl p-5 shadow-subtle hover:shadow-card transition-all flex flex-col justify-between space-y-4"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">

@@ -69,6 +69,10 @@ export default function IncidentMap({
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
+      if (mapContainerRef.current._leaflet_id) {
+        delete mapContainerRef.current._leaflet_id;
+      }
+
       const map = L.map(mapContainerRef.current, {
         center: [PILOT_COORDINATES.lat, PILOT_COORDINATES.lng],
         zoom: PILOT_COORDINATES.zoom,
@@ -95,12 +99,24 @@ export default function IncidentMap({
       });
 
       mapInstanceRef.current = map;
+
+      // Invalidate size once rendered
+      setTimeout(() => {
+        try {
+          map.invalidateSize();
+        } catch (e) {}
+      }, 150);
     }
 
     return () => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        try {
+          mapInstanceRef.current.remove();
+        } catch (e) {}
         mapInstanceRef.current = null;
+      }
+      if (mapContainerRef.current && mapContainerRef.current._leaflet_id) {
+        delete mapContainerRef.current._leaflet_id;
       }
     };
   }, []);
@@ -281,4 +297,3 @@ export default function IncidentMap({
     </div>
   );
 }
-

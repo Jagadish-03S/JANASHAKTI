@@ -81,6 +81,18 @@ export const api = {
     return res.json();
   },
 
+  async getMyIncidents() {
+    const res = await fetch(`${API_BASE}/incidents/my-reports`, { headers: getHeaders() });
+    return res.json();
+  },
+
+  async getNearbyIncidents(lat, lng, radius = 5000) {
+    const res = await fetch(`${API_BASE}/incidents/nearby?lat=${lat}&lng=${lng}&radius=${radius}`, {
+      headers: getHeaders(),
+    });
+    return res.json();
+  },
+
   async getIncidentById(id) {
     const res = await fetch(`${API_BASE}/incidents/${id}`, { headers: getHeaders() });
     return res.json();
@@ -99,6 +111,15 @@ export const api = {
     const res = await fetch(`${API_BASE}/incidents/${id}/vouch`, {
       method: 'POST',
       headers: getHeaders(),
+    });
+    return res.json();
+  },
+
+  async addComment(id, text) {
+    const res = await fetch(`${API_BASE}/incidents/${id}/comments`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ text }),
     });
     return res.json();
   },
