@@ -1,0 +1,32 @@
+{
+  "name": "janashakti-civic-platform",
+  "version": "1.0.0",
+  "description": "JANASHAKTI - Civic Safety and Community Incident Reporting Platform (Pilot City: Davanagere, Karnataka)",
+  "main": "server/src/server.js",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "server": "npm run start --prefix server",
+    "server:dev": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build:client": "npm run build --prefix client",
+    "test:server": "npm run test --prefix server",
+    "test": "npm run test:server"
+  },
+  "keywords": [
+    "civic-tech",
+    "incident-reporting",
+    "davanagere",
+    "postgis",
+    "react",
+    "leaflet",
+    "socket.io",
+    "express"
+  ],
+  "author": "JANASHAKTI Engineering Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+

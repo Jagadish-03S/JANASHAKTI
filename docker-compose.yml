@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL with PostGIS Spatial Engine
+  db:
+    image: postgis/postgis:15-3.4
+    container_name: janashakti-postgis
+    restart: always
+    environment:
+      POSTGRES_DB: janashakti_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_secure_pilot_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./server/db/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./server/db/migrations/002_postgis_indexes.sql:/docker-entrypoint-initdb.d/02_indexes.sql
+      - ./server/db/seeds/001_davanagere_seed.sql:/docker-entrypoint-initdb.d/03_seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d janashakti_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Node.js + Express Backend API
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: janashakti-backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      CLIENT_URL: http://localhost:80
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: janashakti_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres_secure_pilot_password
+      JWT_SECRET: janashakti_production_secret_key_davanagere_pilot_2026
+      AI_SERVICE_URL: http://ai-service:8000
+      PILOT_CITY_NAME: Davanagere
+      PILOT_LATITUDE: 14.4644
+      PILOT_LONGITUDE: 75.9218
+    ports:
+      - "5000:5000"
+    volumes:
+      - uploads_data:/app/uploads
+
+  # 3. Python FastAPI AI Classification Service
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: janashakti-ai
+    restart: always
+    ports:
+      - "8000:8000"
+
+  # 4. React + Vite Frontend (Nginx static build)
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: janashakti-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  uploads_data:
+
